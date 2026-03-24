@@ -56,6 +56,12 @@
 - [ ] Triggers same roll action as tap
 - [ ] Sensitivity configurable or auto-tuned
 
+### Story 7 — Die & Pip Color Themes
+- [ ] Color picker or preset swatches for die face background color
+- [ ] Color picker or preset swatches for pip/number color
+- [ ] Settings persisted in localStorage (part of cfg)
+- [ ] Live preview in settings panel
+
 ### Story 6 — Adjustable Aggressiveness
 - [ ] Slider or stepper in settings: pool multiplier (1× to 5×)
 - [ ] Label explains effect: "1× = strong correction, 3× = balanced, 5× = mild"
