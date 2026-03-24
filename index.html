@@ -334,6 +334,82 @@
       font-size: 15px;
       padding: 24px 0;
     }
+
+    #reset-btn {
+      display: block;
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--red);
+      background: none;
+      border: 1.5px solid var(--red);
+      border-radius: 12px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Confirmation modal */
+    #confirm-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    #confirm-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #confirm-card {
+      background: var(--bg);
+      border-radius: 20px;
+      padding: 28px 24px 20px;
+      width: 100%;
+      max-width: 320px;
+      text-align: center;
+    }
+
+    #confirm-card h2 {
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    #confirm-card p {
+      font-size: 15px;
+      color: var(--subtle);
+      margin-bottom: 24px;
+      line-height: 1.4;
+    }
+
+    .confirm-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .confirm-btns button {
+      flex: 1;
+      padding: 13px;
+      font-size: 15px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #btn-cancel { background: rgba(0,0,0,0.08); color: var(--text); }
+    #btn-confirm-reset { background: var(--red); color: #fff; }
   </style>
 </head>
 <body>
@@ -366,6 +442,18 @@
       </div>
       <div id="history-header">Roll History</div>
       <div id="history-list"></div>
+      <button id="reset-btn">New Game</button>
+    </div>
+  </div>
+
+  <div id="confirm-overlay">
+    <div id="confirm-card">
+      <h2>New game?</h2>
+      <p>All rolls and history will be cleared.</p>
+      <div class="confirm-btns">
+        <button id="btn-cancel">Cancel</button>
+        <button id="btn-confirm-reset">Reset</button>
+      </div>
     </div>
   </div>
 
@@ -564,6 +652,24 @@
     document.getElementById('stats-btn').addEventListener('click', openStats);
     document.getElementById('stats-handle').addEventListener('click', closeStats);
     statsBackdrop.addEventListener('click', closeStats);
+
+    // ── Reset ─────────────────────────────────────────────────────────────────
+    const confirmOverlay = document.getElementById('confirm-overlay');
+
+    function openConfirm() { confirmOverlay.classList.add('open'); }
+    function closeConfirm() { confirmOverlay.classList.remove('open'); }
+
+    document.getElementById('reset-btn').addEventListener('click', openConfirm);
+    document.getElementById('btn-cancel').addEventListener('click', closeConfirm);
+    document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+      pool = freshPool();
+      history = [];
+      saveState(pool, history);
+      sumEl.textContent = '—';
+      sumEl.style.color = 'var(--text)';
+      closeConfirm();
+      closeStats();
+    });
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
   </script>
