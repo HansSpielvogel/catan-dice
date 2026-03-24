@@ -451,6 +451,21 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    #mult-display {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      width: 36px;
+      text-align: center;
+    }
+
+    .mult-hint {
+      display: block;
+      font-size: 12px;
+      color: var(--subtle);
+      margin-top: 8px;
+    }
+
     /* Confirmation modal */
     #confirm-overlay {
       position: fixed;
@@ -588,6 +603,15 @@
         </div>
       </div>
       <div class="settings-section">
+        <span class="settings-label">Balancing</span>
+        <div class="stepper">
+          <button class="step-btn" id="mult-minus">−</button>
+          <span id="mult-display">3×</span>
+          <button class="step-btn" id="mult-plus">+</button>
+        </div>
+        <span class="mult-hint" id="mult-hint">Balanced</span>
+      </div>
+      <div class="settings-section">
         <span class="settings-label">Die color</span>
         <div class="swatch-row" id="die-bg-swatches"></div>
       </div>
@@ -669,8 +693,6 @@
     }
 
     // ── Balanced pool ─────────────────────────────────────────────────────────
-    const POOL_MULT = 3;
-
     function freshPool(cfg) {
       // For very large combination spaces, skip enumeration — drawRoll falls back to random
       if (Math.pow(cfg.sides, cfg.count) > 5000) return [];
@@ -682,7 +704,7 @@
       }
       const all = combos(cfg.count);
       const pool = [];
-      for (let m = 0; m < POOL_MULT; m++) pool.push(...all.map(c => [...c]));
+      for (let m = 0; m < cfg.mult; m++) pool.push(...all.map(c => [...c]));
       return pool;
     }
 
@@ -709,11 +731,12 @@
           cfg: {
             count: c.count ?? 2,
             sides: c.sides ?? 6,
+            mult:  c.mult  ?? 3,
             dieBg: c.dieBg ?? '#ffffff',
             pip:   c.pip   ?? '#1c1c1e',
           },
         };
-      } catch { return { pool: null, history: [], cfg: { count: 2, sides: 6, dieBg: '#ffffff', pip: '#1c1c1e' } }; }
+      } catch { return { pool: null, history: [], cfg: { count: 2, sides: 6, mult: 3, dieBg: '#ffffff', pip: '#1c1c1e' } }; }
     }
 
     function saveState(pool, history) {
@@ -981,8 +1004,11 @@
     });
 
     // ── Settings ──────────────────────────────────────────────────────────────
+    const MULT_LABELS = { 1: 'Strong correction', 2: 'Moderate correction', 3: 'Balanced', 4: 'Mild', 5: 'Very mild' };
+
     let pendingCount = cfg.count;
     let pendingSides = cfg.sides;
+    let pendingMult  = cfg.mult;
     let pendingDieBg = cfg.dieBg;
     let pendingPip   = cfg.pip;
 
@@ -993,6 +1019,10 @@
       document.querySelectorAll('.die-type-btn').forEach(btn => {
         btn.classList.toggle('active', +btn.dataset.s === pendingSides);
       });
+      document.getElementById('mult-display').textContent = pendingMult + '×';
+      document.getElementById('mult-hint').textContent    = MULT_LABELS[pendingMult];
+      document.getElementById('mult-minus').disabled = pendingMult <= 1;
+      document.getElementById('mult-plus').disabled  = pendingMult >= 5;
       document.querySelectorAll('#die-bg-swatches .swatch').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.color === pendingDieBg);
       });
@@ -1027,6 +1057,7 @@
     document.getElementById('settings-btn').addEventListener('click', () => {
       pendingCount = cfg.count;
       pendingSides = cfg.sides;
+      pendingMult  = cfg.mult;
       pendingDieBg = cfg.dieBg;
       pendingPip   = cfg.pip;
       updateSettingsUI();
@@ -1041,18 +1072,29 @@
       if (pendingCount < 5) { pendingCount++; updateSettingsUI(); }
     });
 
+    document.getElementById('mult-minus').addEventListener('click', () => {
+      if (pendingMult > 1) { pendingMult--; updateSettingsUI(); }
+    });
+
+    document.getElementById('mult-plus').addEventListener('click', () => {
+      if (pendingMult < 5) { pendingMult++; updateSettingsUI(); }
+    });
+
     document.querySelectorAll('.die-type-btn').forEach(btn => {
       btn.addEventListener('click', () => { pendingSides = +btn.dataset.s; updateSettingsUI(); });
     });
 
     document.getElementById('settings-apply').addEventListener('click', () => {
-      const cfgChanged   = pendingCount !== cfg.count || pendingSides !== cfg.sides;
+      const diceChanged  = pendingCount !== cfg.count || pendingSides !== cfg.sides;
+      const multChanged  = pendingMult  !== cfg.mult;
       const themeChanged = pendingDieBg !== cfg.dieBg || pendingPip !== cfg.pip;
+      const cfgChanged   = diceChanged || multChanged;
       if (!cfgChanged && !themeChanged) { closePanel(); return; }
 
       const apply = () => {
         cfg.count = pendingCount;
         cfg.sides = pendingSides;
+        cfg.mult  = pendingMult;
         cfg.dieBg = pendingDieBg;
         cfg.pip   = pendingPip;
         applyTheme();
@@ -1066,11 +1108,10 @@
       };
 
       if (cfgChanged && history.length > 0) {
-        openConfirm(
-          `Switch to ${pendingCount}d${pendingSides}?`,
-          'All rolls and history will be cleared.',
-          apply
-        );
+        const title = diceChanged
+          ? `Switch to ${pendingCount}d${pendingSides}?`
+          : `Change balancing to ${pendingMult}×?`;
+        openConfirm(title, 'All rolls and history will be cleared.', apply);
       } else {
         apply();
       }

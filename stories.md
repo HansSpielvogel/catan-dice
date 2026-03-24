@@ -62,10 +62,10 @@
 - [x] Settings persisted in localStorage (part of cfg)
 - [x] Live preview: CSS vars update immediately on swatch tap; reverted on cancel
 
-### Story 6 — Adjustable Aggressiveness
-- [ ] Slider or stepper in settings: pool multiplier (1× to 5×)
-- [ ] Label explains effect: "1× = strong correction, 3× = balanced, 5× = mild"
-- [ ] Changing multiplier triggers implicit reset with confirmation
+### Story 6 — Adjustable Aggressiveness ✅ DONE
+- [x] Stepper in settings: pool multiplier (1× to 5×)
+- [x] Label explains effect: "1× = strong correction, 3× = balanced, 5× = mild"
+- [x] Changing multiplier triggers implicit reset with confirmation
 
 ---
 
