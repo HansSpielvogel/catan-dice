@@ -77,39 +77,39 @@
 - [x] Replaces old auto-detected `isCatan` (`count===2 && sides===6`) with manual opt-in toggle
 - [x] localStorage bumped to `catan-dice-v3`
 
-### Story 9 — Dice Hop Animation & Roll Sound Effects
+### Story 9 — Dice Hop Animation & Roll Sound Effects ✅ DONE
 Improve the roll experience with physical animation and audio feedback.
 
 #### 9a: Hop/Bounce Animation
-- [ ] Add `@keyframes die-hop` on `.die-wrapper` (not `.cube` — that's used for 3D rotation)
+- [x] Add `@keyframes die-hop` on `.die-wrapper` (not `.cube` — that's used for 3D rotation)
   - 0%: resting (`translateY(0) scale(1)`)
   - 30%: peak — die lifts up and shrinks slightly (`translateY(-28px) scale(0.92)`) to look "farther away"
   - 55%: lands back at origin
   - 68%: micro-bounce (`translateY(-6px) scale(0.98)`)
   - 80–100%: settles to rest
   - Duration: `0.75s` matching existing cube rotation transition
-- [ ] Add ground shadow via `.die-wrapper::after` pseudo-element
+- [x] Add ground shadow via `.die-wrapper::after` pseudo-element
   - Permanent subtle elliptical shadow (`radial-gradient`, ~0.6 opacity)
   - `@keyframes shadow-hop`: spreads wider + fades when die is "up", tightens on impact
-- [ ] `.die-wrapper.hopping` class triggers both keyframe animations
-- [ ] `.die-wrapper` needs `position: relative` for shadow positioning
-- [ ] In `doRoll()`: add `.hopping` to each `cubes[i].parentElement` at animation start
-- [ ] In the existing 800ms `setTimeout`: remove `.hopping` from all wrappers
-- [ ] Safety: force-remove `.hopping` at start of `doRoll()` in case of rapid re-rolls at the 800ms boundary
+- [x] `.die-wrapper.hopping` class triggers both keyframe animations
+- [x] `.die-wrapper` needs `position: relative` for shadow positioning
+- [x] In `doRoll()`: add `.hopping` to each `cubes[i].parentElement` at animation start
+- [x] In the existing 800ms `setTimeout`: remove `.hopping` from all wrappers
+- [x] Safety: force-remove `.hopping` at start of `doRoll()` in case of rapid re-rolls at the 800ms boundary
 
 #### 9b: Synthesized Roll Sounds (Web Audio API)
 No external audio files — sounds generated inline via Web Audio API.
-- [ ] Lazy `audioCtx` init (created on first use inside a user gesture; add `resume()` for iOS suspend safety)
-- [ ] `playWood()` — warm thud: filtered noise burst (lowpass 800Hz, Q=1.5) + sine oscillator (120→60Hz), ~100ms decay. Gain envelope: 0.5→0.001 exponential ramp.
-- [ ] `playPlastic()` — bright click: shorter noise burst (bandpass 3500Hz, Q=2) + triangle osc (800→300Hz), ~50ms decay. Gain: 0.4→0.001.
-- [ ] `playLandSound()` — dispatches based on `cfg.sound`: `'wood'` → `playWood()`, `'plastic'` → `playPlastic()`, `'none'` → no-op
-- [ ] In `doRoll()`: `setTimeout(playLandSound, 520)` — fires just before visual landing for perceptual sync
-- [ ] One sound per roll (not per die)
+- [x] Lazy `audioCtx` init (created on first use inside a user gesture; add `resume()` for iOS suspend safety)
+- [x] `playWood()` — warm thud: filtered noise burst (lowpass 800Hz, Q=1.5) + sine oscillator (120→60Hz), ~100ms decay. Gain envelope: 0.5→0.001 exponential ramp.
+- [x] `playPlastic()` — bright click: shorter noise burst (bandpass 3500Hz, Q=2) + triangle osc (800→300Hz), ~50ms decay. Gain: 0.4→0.001.
+- [x] `playLandSound()` — dispatches based on `cfg.sound`: `'wood'` → `playWood()`, `'plastic'` → `playPlastic()`, `'none'` → no-op
+- [x] In `doRoll()`: `setTimeout(playLandSound, 520)` — fires just before visual landing for perceptual sync
+- [x] One sound per roll (not per die)
 
 #### 9c: Sound Settings UI
-- [ ] Add `cfg.sound` (default: `'none'`), bump localStorage key `v3` → `v4`
-- [ ] Add `pendingSound` to pending state vars, reset in settings-btn click handler
-- [ ] New settings section (after Background, before Apply button):
+- [x] Add `cfg.sound` (default: `'none'`), bump localStorage key `v3` → `v4`
+- [x] Add `pendingSound` to pending state vars, reset in settings-btn click handler
+- [x] New settings section (after Background, before Apply button):
   ```html
   <span class="settings-label">Roll sound</span>
   <div class="die-type-btns" id="sound-btns">
@@ -119,12 +119,12 @@ No external audio files — sounds generated inline via Web Audio API.
   </div>
   ```
   Reuses existing `.die-type-btns` / `.die-type-btn` styling.
-- [ ] Sound button click listeners → set `pendingSound` + call `updateSettingsUI()`
-- [ ] Play preview sound when tapping Wood/Plastic in settings (immediate feedback before Apply)
-- [ ] `updateSettingsUI()`: toggle `.active` on `#sound-btns .die-type-btn` by `data-sound`
-- [ ] `themeChanged` check: include `pendingSound !== cfg.sound` (no game reset needed)
-- [ ] In apply closure: `cfg.sound = pendingSound`
-- [ ] `loadState()`: add `sound: c.sound ?? 'none'` + same in catch fallback
+- [x] Sound button click listeners → set `pendingSound` + call `updateSettingsUI()`
+- [x] Play preview sound when tapping Wood/Plastic in settings (immediate feedback before Apply)
+- [x] `updateSettingsUI()`: toggle `.active` on `#sound-btns .die-type-btn` by `data-sound`
+- [x] `themeChanged` check: include `pendingSound !== cfg.sound` (no game reset needed)
+- [x] In apply closure: `cfg.sound = pendingSound`
+- [x] `loadState()`: add `sound: c.sound ?? 'none'` + same in catch fallback
 
 ---
 
