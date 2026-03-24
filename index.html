@@ -593,7 +593,7 @@
       </div>
       <div class="settings-section">
         <span class="settings-label">Die type</span>
-        <div class="die-type-btns" id="die-type-btns">
+        <div class="die-type-btns">
           <button class="die-type-btn" data-s="4">d4</button>
           <button class="die-type-btn active" data-s="6">d6</button>
           <button class="die-type-btn" data-s="8">d8</button>
@@ -625,8 +625,8 @@
 
   <div id="confirm-overlay">
     <div id="confirm-card">
-      <h2>New game?</h2>
-      <p>All rolls and history will be cleared.</p>
+      <h2></h2>
+      <p></p>
       <div class="confirm-btns">
         <button id="btn-cancel">Cancel</button>
         <button id="btn-confirm-reset">Reset</button>
@@ -693,9 +693,11 @@
     }
 
     // ── Balanced pool ─────────────────────────────────────────────────────────
+    // Enumeration is too expensive above this threshold — fall back to pure random
+    const isPoolCapped = cfg => Math.pow(cfg.sides, cfg.count) > 5000;
+
     function freshPool(cfg) {
-      // For very large combination spaces, skip enumeration — drawRoll falls back to random
-      if (Math.pow(cfg.sides, cfg.count) > 5000) return [];
+      if (isPoolCapped(cfg)) return [];
       function combos(n) {
         if (n === 0) return [[]];
         return combos(n - 1).flatMap(c =>
@@ -710,7 +712,7 @@
 
     function drawRoll(pool, cfg) {
       if (pool.length === 0) {
-        if (Math.pow(cfg.sides, cfg.count) > 5000)
+        if (isPoolCapped(cfg))
           return Array.from({ length: cfg.count }, () => Math.ceil(Math.random() * cfg.sides));
         pool.push(...freshPool(cfg));
       }
@@ -819,15 +821,14 @@
     const states = [];
 
     function buildDiceRow() {
-      const diceRow = document.getElementById('dice-row');
-      diceRow.innerHTML = '';
+      diceRowEl.innerHTML = '';
       cubes.length = 0;
       states.length = 0;
 
       const size = DIE_SIZES[cfg.count];
       document.documentElement.style.setProperty('--size', size + 'px');
       document.documentElement.style.setProperty('--half', (size / 2) + 'px');
-      diceRow.style.gap = ROW_GAPS[cfg.count] + 'px';
+      diceRowEl.style.gap = ROW_GAPS[cfg.count] + 'px';
 
       for (let i = 0; i < cfg.count; i++) {
         const wrapper = document.createElement('div');
@@ -836,7 +837,7 @@
         cube.className = 'cube';
         buildCube(cube, cfg.sides);
         wrapper.appendChild(cube);
-        diceRow.appendChild(wrapper);
+        diceRowEl.appendChild(wrapper);
         cubes.push(cube);
         states.push({ x: 0, y: 0, face: 1 });
       }
@@ -856,6 +857,16 @@
     const chartEl       = document.getElementById('chart');
     const statsTitleEl  = document.getElementById('stats-title');
     const historyListEl = document.getElementById('history-list');
+    const diceRowEl     = document.getElementById('dice-row');
+    const confirmTitleEl = document.querySelector('#confirm-card h2');
+    const confirmMsgEl   = document.querySelector('#confirm-card p');
+    const diceCountDisplayEl = document.getElementById('dice-count-display');
+    const diceMinusBtn       = document.getElementById('dice-minus');
+    const dicePlusBtn        = document.getElementById('dice-plus');
+    const multDisplayEl      = document.getElementById('mult-display');
+    const multHintEl         = document.getElementById('mult-hint');
+    const multMinusBtn       = document.getElementById('mult-minus');
+    const multPlusBtn        = document.getElementById('mult-plus');
     const saved = loadState();
     let cfg     = saved.cfg;
     let pool    = saved.pool ?? freshPool(cfg);
@@ -970,8 +981,8 @@
     let confirmCallback  = null;
 
     function openConfirm(title, msg, onConfirm) {
-      document.querySelector('#confirm-card h2').textContent = title;
-      document.querySelector('#confirm-card p').textContent  = msg;
+      confirmTitleEl.textContent = title;
+      confirmMsgEl.textContent   = msg;
       confirmCallback = onConfirm;
       confirmOverlay.classList.add('open');
     }
@@ -1013,16 +1024,16 @@
     let pendingPip   = cfg.pip;
 
     function updateSettingsUI() {
-      document.getElementById('dice-count-display').textContent = pendingCount;
-      document.getElementById('dice-minus').disabled = pendingCount <= 1;
-      document.getElementById('dice-plus').disabled  = pendingCount >= 5;
+      diceCountDisplayEl.textContent = pendingCount;
+      diceMinusBtn.disabled = pendingCount <= 1;
+      dicePlusBtn.disabled  = pendingCount >= 5;
       document.querySelectorAll('.die-type-btn').forEach(btn => {
         btn.classList.toggle('active', +btn.dataset.s === pendingSides);
       });
-      document.getElementById('mult-display').textContent = pendingMult + '×';
-      document.getElementById('mult-hint').textContent    = MULT_LABELS[pendingMult];
-      document.getElementById('mult-minus').disabled = pendingMult <= 1;
-      document.getElementById('mult-plus').disabled  = pendingMult >= 5;
+      multDisplayEl.textContent = pendingMult + '×';
+      multHintEl.textContent    = MULT_LABELS[pendingMult];
+      multMinusBtn.disabled = pendingMult <= 1;
+      multPlusBtn.disabled  = pendingMult >= 5;
       document.querySelectorAll('#die-bg-swatches .swatch').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.color === pendingDieBg);
       });
@@ -1064,19 +1075,19 @@
       openPanel(settingsPanel);
     });
 
-    document.getElementById('dice-minus').addEventListener('click', () => {
+    diceMinusBtn.addEventListener('click', () => {
       if (pendingCount > 1) { pendingCount--; updateSettingsUI(); }
     });
 
-    document.getElementById('dice-plus').addEventListener('click', () => {
+    dicePlusBtn.addEventListener('click', () => {
       if (pendingCount < 5) { pendingCount++; updateSettingsUI(); }
     });
 
-    document.getElementById('mult-minus').addEventListener('click', () => {
+    multMinusBtn.addEventListener('click', () => {
       if (pendingMult > 1) { pendingMult--; updateSettingsUI(); }
     });
 
-    document.getElementById('mult-plus').addEventListener('click', () => {
+    multPlusBtn.addEventListener('click', () => {
       if (pendingMult < 5) { pendingMult++; updateSettingsUI(); }
     });
 
