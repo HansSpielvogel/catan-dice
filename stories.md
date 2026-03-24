@@ -35,10 +35,10 @@
 - [x] State persisted in localStorage
 - [x] Sum "7" highlighted in red (triggers robber in Catan)
 
-### Story 2 — Stats View
-- [ ] Scrollable history of all rolls (number + sum)
-- [ ] Bar chart: actual frequency vs theoretical frequency per sum (2–12)
-- [ ] Toggle button to show/hide stats panel
+### Story 2 — Stats View ✅ DONE
+- [x] Scrollable history of all rolls (number + sum)
+- [x] Bar chart: actual frequency vs theoretical frequency per sum (2–12)
+- [x] Toggle button to show/hide stats panel
 
 ### Story 3 — Reset
 - [ ] Reset button visible in UI
@@ -74,3 +74,10 @@
 - `will-change: transform` on `.cube` improves animation performance on iOS Safari.
 - `touch-action: manipulation` on body suppresses the 300ms tap delay on iOS without disabling scrolling.
 - `height: 100dvh` (dynamic viewport height) handles iOS Safari bottom bar correctly; `env(safe-area-inset-*)` covers Dynamic Island and home indicator.
+
+### Story 2
+- localStorage key `catan-dice-v1` stores `{ pool, history }` — history is `[d1, d2][]`, added in Story 2 (old format `{ pool }` gracefully migrates via `?.history ?? []`).
+- Bar chart: normalize bar heights against `max(MAX_THEO, maxActual)` so actual bars never overflow even when one sum is rolled disproportionately.
+- Stats panel is a CSS bottom-sheet: `position:fixed; transform:translateY(100%)` → `.open { transform:translateY(0) }` with a backdrop overlay. Re-render on every open (cheap for ≤200 rolls).
+- Two bars per column (gray=expected, dark=actual), both in a `display:flex; align-items:flex-end` container — height set via inline `style="height:Xpx"` since parent has no definite pixel height from CSS alone.
+- `renderStats()` is called on open, not on every roll — avoids wasted work when panel is closed.

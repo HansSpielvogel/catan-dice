@@ -24,6 +24,10 @@ GitHub Pages. Use relative paths (`./`) everywhere — `start_url`, `scope`, ass
 - `s1`, `s2` — die animation state `{ x, y, face }` — kept in memory only (resets to face 1 on reload, which is fine)
 - `pool` — persisted in localStorage so balancing survives page reloads mid-game
 
+## Git Workflow
+- Commit after completing each story
+- Do NOT push — user pushes manually
+
 ## Stories
 See `stories.md` for full backlog with checkboxes.
 
