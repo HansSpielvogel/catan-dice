@@ -56,11 +56,11 @@
 - [x] Triggers same roll action as tap
 - [x] Sensitivity auto-tuned (threshold = 15 m/s², cooldown = 1000ms)
 
-### Story 7 — Die & Pip Color Themes
-- [ ] Color picker or preset swatches for die face background color
-- [ ] Color picker or preset swatches for pip/number color
-- [ ] Settings persisted in localStorage (part of cfg)
-- [ ] Live preview in settings panel
+### Story 7 — Die & Pip Color Themes ✅ DONE
+- [x] Preset swatches for die face background color (8 presets)
+- [x] Preset swatches for pip/number color (6 presets)
+- [x] Settings persisted in localStorage (part of cfg)
+- [x] Live preview: CSS vars update immediately on swatch tap; reverted on cancel
 
 ### Story 6 — Adjustable Aggressiveness
 - [ ] Slider or stepper in settings: pool multiplier (1× to 5×)
@@ -105,6 +105,14 @@
 - Confirm modal is reused for both reset and settings-change via `openConfirm(title, msg, callback)`.
 - Red-7 highlight only when `cfg.n===2 && cfg.s===6` (Catan-specific rule).
 - Stats chart is horizontally scrollable (`#chart-wrap` with `overflow-x:auto`) to handle up to 96 bars (5d20).
+
+### Story 5
+### Story 7
+- Swatch active state tracked via `data-color` attribute — avoids ambiguity between `style.background` and `style.backgroundColor` browser normalization.
+- Live preview: update CSS vars (`--die-bg`, `--pip`) on `:root` immediately when swatch is tapped; `closePanel()` calls `applyTheme()` to revert to saved cfg if not applied.
+- Theme stored as `cfg.dieBg` / `cfg.pip` — same localStorage key (v2), with fallback defaults in `loadState` so old saves still work.
+- Theme-only changes (no dice count/sides change) apply silently without confirmation modal — no data loss.
+- `buildSwatchRow()` is a small shared helper; swatches are built once at init, not on every panel open.
 
 ### Story 5
 - `DeviceMotionEvent.requestPermission()` exists only on iOS 13+ — call it inside a user-gesture handler (tap), not on page load, or it silently fails.

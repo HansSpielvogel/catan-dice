@@ -512,6 +512,23 @@
 
     #btn-cancel       { background: rgba(0,0,0,0.08); color: var(--text); }
     #btn-confirm-reset { background: var(--red); color: #fff; }
+
+    /* Color swatches */
+    .swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+      -webkit-tap-highlight-color: transparent;
+      outline: 3px solid transparent;
+      outline-offset: 2px;
+    }
+
+    .swatch.active { outline-color: var(--text); }
   </style>
 </head>
 <body>
@@ -569,6 +586,14 @@
           <button class="die-type-btn" data-s="12">d12</button>
           <button class="die-type-btn" data-s="20">d20</button>
         </div>
+      </div>
+      <div class="settings-section">
+        <span class="settings-label">Die color</span>
+        <div class="swatch-row" id="die-bg-swatches"></div>
+      </div>
+      <div class="settings-section">
+        <span class="settings-label">Pip color</span>
+        <div class="swatch-row" id="pip-swatches"></div>
       </div>
       <button id="settings-apply">Apply</button>
     </div>
@@ -677,12 +702,18 @@
     function loadState() {
       try {
         const s = JSON.parse(localStorage.getItem(KEY));
+        const c = s?.cfg ?? {};
         return {
           pool:    s?.pool    ?? null,
           history: s?.history ?? [],
-          cfg:     s?.cfg     ?? { count: 2, sides: 6 },
+          cfg: {
+            count: c.count ?? 2,
+            sides: c.sides ?? 6,
+            dieBg: c.dieBg ?? '#ffffff',
+            pip:   c.pip   ?? '#1c1c1e',
+          },
         };
-      } catch { return { pool: null, history: [], cfg: { count: 2, sides: 6 } }; }
+      } catch { return { pool: null, history: [], cfg: { count: 2, sides: 6, dieBg: '#ffffff', pip: '#1c1c1e' } }; }
     }
 
     function saveState(pool, history) {
@@ -788,6 +819,15 @@
       }
     }
 
+    // ── Theme ─────────────────────────────────────────────────────────────────
+    const DIE_BG_PRESETS = ['#ffffff','#f5f0e0','#fffde7','#e8f5e9','#ddeeff','#fce4ec','#37474f','#1c1c1e'];
+    const PIP_PRESETS    = ['#1c1c1e','#ffffff','#c0392b','#2980b9','#27ae60','#f39c12'];
+
+    function applyTheme() {
+      document.documentElement.style.setProperty('--die-bg', cfg.dieBg);
+      document.documentElement.style.setProperty('--pip', cfg.pip);
+    }
+
     // ── Init ──────────────────────────────────────────────────────────────────
     const sumEl         = document.getElementById('sum');
     const chartEl       = document.getElementById('chart');
@@ -799,6 +839,7 @@
     let history = saved.history;
     let locked  = false;
 
+    applyTheme();
     buildDiceRow();
 
     // ── Roll ──────────────────────────────────────────────────────────────────
@@ -889,6 +930,7 @@
       statsPanel.classList.remove('open');
       settingsPanel.classList.remove('open');
       panelBackdrop.classList.remove('open');
+      applyTheme(); // revert any live preview that wasn't applied
     }
 
     panelBackdrop.addEventListener('click', closePanel);
@@ -941,6 +983,8 @@
     // ── Settings ──────────────────────────────────────────────────────────────
     let pendingCount = cfg.count;
     let pendingSides = cfg.sides;
+    let pendingDieBg = cfg.dieBg;
+    let pendingPip   = cfg.pip;
 
     function updateSettingsUI() {
       document.getElementById('dice-count-display').textContent = pendingCount;
@@ -949,11 +993,42 @@
       document.querySelectorAll('.die-type-btn').forEach(btn => {
         btn.classList.toggle('active', +btn.dataset.s === pendingSides);
       });
+      document.querySelectorAll('#die-bg-swatches .swatch').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.color === pendingDieBg);
+      });
+      document.querySelectorAll('#pip-swatches .swatch').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.color === pendingPip);
+      });
     }
+
+    function buildSwatchRow(containerEl, presets, onClick) {
+      presets.forEach(color => {
+        const btn = document.createElement('button');
+        btn.className = 'swatch';
+        btn.style.background = color;
+        btn.dataset.color = color;
+        btn.addEventListener('click', () => onClick(color));
+        containerEl.appendChild(btn);
+      });
+    }
+
+    buildSwatchRow(document.getElementById('die-bg-swatches'), DIE_BG_PRESETS, color => {
+      pendingDieBg = color;
+      document.documentElement.style.setProperty('--die-bg', color);
+      updateSettingsUI();
+    });
+
+    buildSwatchRow(document.getElementById('pip-swatches'), PIP_PRESETS, color => {
+      pendingPip = color;
+      document.documentElement.style.setProperty('--pip', color);
+      updateSettingsUI();
+    });
 
     document.getElementById('settings-btn').addEventListener('click', () => {
       pendingCount = cfg.count;
       pendingSides = cfg.sides;
+      pendingDieBg = cfg.dieBg;
+      pendingPip   = cfg.pip;
       updateSettingsUI();
       openPanel(settingsPanel);
     });
@@ -971,18 +1046,26 @@
     });
 
     document.getElementById('settings-apply').addEventListener('click', () => {
-      const changed = pendingCount !== cfg.count || pendingSides !== cfg.sides;
-      if (!changed) { closePanel(); return; }
+      const cfgChanged   = pendingCount !== cfg.count || pendingSides !== cfg.sides;
+      const themeChanged = pendingDieBg !== cfg.dieBg || pendingPip !== cfg.pip;
+      if (!cfgChanged && !themeChanged) { closePanel(); return; }
 
       const apply = () => {
         cfg.count = pendingCount;
         cfg.sides = pendingSides;
-        buildDiceRow();
-        doReset();
+        cfg.dieBg = pendingDieBg;
+        cfg.pip   = pendingPip;
+        applyTheme();
+        if (cfgChanged) {
+          buildDiceRow();
+          doReset(); // saves state
+        } else {
+          saveState(pool, history);
+        }
         closePanel();
       };
 
-      if (history.length > 0) {
+      if (cfgChanged && history.length > 0) {
         openConfirm(
           `Switch to ${pendingCount}d${pendingSides}?`,
           'All rolls and history will be cleared.',
