@@ -10,16 +10,16 @@ GitHub Pages. Use relative paths (`./`) everywhere — `start_url`, `scope`, ass
 
 ### Config (`cfg`)
 ```js
-let cfg = { n: 2, s: 6 }; // n = number of dice (1–5), s = sides per die (4/6/8/10/12/20)
+let cfg = { count: 2, sides: 6 }; // count = number of dice (1–5), sides = sides per die (4/6/8/10/12/20)
 ```
 - Defaults to 2d6 (standard Catan)
 - Persisted in localStorage as part of the unified state object
 - Changing cfg triggers a full reset (pool + history cleared)
 
 ### localStorage
-Single key `catan-dice-v1`, stores one JSON object:
+Single key `catan-dice-v2`, stores one JSON object:
 ```json
-{ "pool": [...], "history": [[d1,d2], ...], "cfg": { "n": 2, "s": 6 } }
+{ "pool": [...], "history": [[d1,d2], ...], "cfg": { "count": 2, "sides": 6 } }
 ```
 - `pool` — remaining draw entries; null means use a fresh pool
 - `history` — array of roll results, each an array of N die values
@@ -35,7 +35,7 @@ Single key `catan-dice-v1`, stores one JSON object:
 - `rotateTo(cubeEl, state, face)` accumulates absolute X/Y degrees in `state.x / state.y` across rolls (never reset) to avoid CSS transition artifacts; adds 1080° per roll for the spin effect
 - For d6: `targetFace = rolledValue` (pip face index matches value 1–6)
 - For non-d6: `targetFace = random 1–6`; that face's `.die-number` text is set to the rolled value before animating
-- `cubes[]` and `states[]` are parallel arrays built by `buildDiceRow()`; size = `cfg.n`
+- `cubes[]` and `states[]` are parallel arrays built by `buildDiceRow()`; size = `cfg.count`
 
 ### Die sizing (set on `:root` CSS vars)
 | N dice | `--size` | `--half` |
@@ -47,9 +47,9 @@ Single key `catan-dice-v1`, stores one JSON object:
 | 5      | 56px     | 28px     |
 
 ### Balancing Pool
-- `freshPool()` enumerates all `s^n` combinations recursively × `MULT=3`
-- **Cap**: if `s^n > 5000`, returns `[]` — `drawRoll()` then generates pure random rolls (no balancing)
-- `drawRoll(pool)` splices a random entry out (draw without replacement); auto-refills when empty
+- `freshPool(cfg)` enumerates all `sides^count` combinations recursively × `POOL_MULT=3`
+- **Cap**: if `sides^count > 5000`, returns `[]` — `drawRoll()` then generates pure random rolls (no balancing)
+- `drawRoll(pool, cfg)` splices a random entry out (draw without replacement); auto-refills when empty
 - Pool size for standard 2d6: 36 × 3 = 108 entries
 
 ### Theoretical Distribution
@@ -74,14 +74,25 @@ closeConfirm()                       // clears callback
 Used for both "New Game" reset and "Switch to NdS?" settings change.
 
 ### Stats Chart
-- Bars rendered for every sum from `cfg.n` to `cfg.n * cfg.s`
+- Bars rendered for every sum from `cfg.count` to `cfg.count * cfg.sides`
 - Two bars per column: gray (expected) and dark (actual), heights in px normalized to `BAR_H=100`
 - Scale = `max(maxTheoreticalFreq, maxActualFreq)` so actual bars never overflow
 - Chart wrapped in `#chart-wrap` with `overflow-x: auto` for configs with many sums (up to 96 bars for 5d20)
-- Red/bold label for sum=7 only when `cfg.n===2 && cfg.s===6` (Catan robber rule)
+- Red/bold label for sum=7 only when `cfg.count===2 && cfg.sides===6` (Catan robber rule)
+- `chartEl`, `statsTitleEl`, `historyListEl` are cached DOM refs (queried once at init)
 
 ### Red-7 Highlight
-Only applies when `cfg.n === 2 && cfg.s === 6` — the standard Catan robber trigger. Affects both the main sum display and the stats chart label.
+Only applies when `cfg.count === 2 && cfg.sides === 6` — the standard Catan robber trigger. Affects both the main sum display and the stats chart label.
+
+## Code Quality Standards
+These conventions are established and must be maintained in future stories:
+
+- **cfg properties**: use `cfg.count` and `cfg.sides` — never single-letter abbreviations
+- **Pure functions**: `freshPool(cfg)` and `drawRoll(pool, cfg)` take cfg as a parameter — do not revert to global access
+- **DOM caching**: elements queried repeatedly (`chartEl`, `statsTitleEl`, `historyListEl`, `sumEl`) are cached at init — add new cached refs there, not inside render functions
+- **Loop variables**: use descriptive names (`sum`, `value`) not single letters (`s`, `v`) in `renderStats`
+- **Constants**: use `SCREAMING_SNAKE` and descriptive names (`POOL_MULT` not `MULT`, `BAR_H` is fine as domain-standard)
+- **localStorage key**: currently `catan-dice-v2` — bump to v3 if the stored shape changes again
 
 ## Git Workflow
 - Commit after completing each story

@@ -644,35 +644,35 @@
     }
 
     // ── Balanced pool ─────────────────────────────────────────────────────────
-    const MULT = 3;
+    const POOL_MULT = 3;
 
-    function freshPool() {
+    function freshPool(cfg) {
       // For very large combination spaces, skip enumeration — drawRoll falls back to random
-      if (Math.pow(cfg.s, cfg.n) > 5000) return [];
+      if (Math.pow(cfg.sides, cfg.count) > 5000) return [];
       function combos(n) {
         if (n === 0) return [[]];
         return combos(n - 1).flatMap(c =>
-          Array.from({ length: cfg.s }, (_, i) => [...c, i + 1])
+          Array.from({ length: cfg.sides }, (_, i) => [...c, i + 1])
         );
       }
-      const all = combos(cfg.n);
+      const all = combos(cfg.count);
       const pool = [];
-      for (let m = 0; m < MULT; m++) pool.push(...all.map(c => [...c]));
+      for (let m = 0; m < POOL_MULT; m++) pool.push(...all.map(c => [...c]));
       return pool;
     }
 
-    function drawRoll(pool) {
+    function drawRoll(pool, cfg) {
       if (pool.length === 0) {
-        if (Math.pow(cfg.s, cfg.n) > 5000)
-          return Array.from({ length: cfg.n }, () => Math.ceil(Math.random() * cfg.s));
-        pool.push(...freshPool());
+        if (Math.pow(cfg.sides, cfg.count) > 5000)
+          return Array.from({ length: cfg.count }, () => Math.ceil(Math.random() * cfg.sides));
+        pool.push(...freshPool(cfg));
       }
       const i = Math.floor(Math.random() * pool.length);
       return pool.splice(i, 1)[0];
     }
 
     // ── State persistence ─────────────────────────────────────────────────────
-    const KEY = 'catan-dice-v1';
+    const KEY = 'catan-dice-v2';
 
     function loadState() {
       try {
@@ -680,9 +680,9 @@
         return {
           pool:    s?.pool    ?? null,
           history: s?.history ?? [],
-          cfg:     s?.cfg     ?? { n: 2, s: 6 },
+          cfg:     s?.cfg     ?? { count: 2, sides: 6 },
         };
-      } catch { return { pool: null, history: [], cfg: { n: 2, s: 6 } }; }
+      } catch { return { pool: null, history: [], cfg: { count: 2, sides: 6 } }; }
     }
 
     function saveState(pool, history) {
@@ -710,25 +710,24 @@
     const BAR_H = 100; // px, normalized max bar height
 
     function renderStats() {
-      const theo    = computeTheo(cfg.n, cfg.s);
-      const minSum  = cfg.n;
-      const maxSum  = cfg.n * cfg.s;
-      const isCatan = cfg.n === 2 && cfg.s === 6;
+      const theo    = computeTheo(cfg.count, cfg.sides);
+      const minSum  = cfg.count;
+      const maxSum  = cfg.count * cfg.sides;
+      const isCatan = cfg.count === 2 && cfg.sides === 6;
       const total   = history.length;
 
       const counts = {};
-      for (let s = minSum; s <= maxSum; s++) counts[s] = 0;
+      for (let sum = minSum; sum <= maxSum; sum++) counts[sum] = 0;
       history.forEach(vs => counts[vs.reduce((a, b) => a + b, 0)]++);
 
       const maxTheo   = Math.max(...Object.values(theo));
       const maxActual = total > 0 ? Math.max(...Object.values(counts).map(c => c / total)) : 0;
       const scale     = Math.max(maxTheo, maxActual);
 
-      const chartEl = document.getElementById('chart');
       chartEl.innerHTML = '';
-      for (let s = minSum; s <= maxSum; s++) {
-        const theoH = Math.round((theo[s] || 0) / scale * BAR_H);
-        const actH  = total > 0 ? Math.round(counts[s] / total / scale * BAR_H) : 0;
+      for (let sum = minSum; sum <= maxSum; sum++) {
+        const theoH = Math.round((theo[sum] || 0) / scale * BAR_H);
+        const actH  = total > 0 ? Math.round(counts[sum] / total / scale * BAR_H) : 0;
         const col = document.createElement('div');
         col.className = 'chart-col';
         col.innerHTML =
@@ -736,27 +735,26 @@
             `<div class="bar-theo"   style="height:${theoH}px"></div>` +
             `<div class="bar-actual" style="height:${actH}px"></div>` +
           `</div>` +
-          `<div class="chart-lbl${(isCatan && s === 7) ? ' seven' : ''}">${s}</div>`;
+          `<div class="chart-lbl${(isCatan && sum === 7) ? ' seven' : ''}">${sum}</div>`;
         chartEl.appendChild(col);
       }
 
-      document.getElementById('stats-title').textContent =
+      statsTitleEl.textContent =
         total === 0 ? 'Statistics' : `Statistics — ${total} roll${total === 1 ? '' : 's'}`;
 
-      const histEl = document.getElementById('history-list');
       if (total === 0) {
-        histEl.innerHTML = '<div class="no-rolls">No rolls yet</div>';
+        historyListEl.innerHTML = '<div class="no-rolls">No rolls yet</div>';
         return;
       }
-      histEl.innerHTML = '';
+      historyListEl.innerHTML = '';
       history.slice().reverse().forEach(vs => {
-        const s = vs.reduce((a, b) => a + b, 0);
+        const sum = vs.reduce((a, b) => a + b, 0);
         const row = document.createElement('div');
         row.className = 'history-row';
         row.innerHTML =
           `<span class="hist-dice">${vs.join(' + ')}</span>` +
-          `<span class="hist-sum${(isCatan && s === 7) ? ' seven' : ''}">= ${s}</span>`;
-        histEl.appendChild(row);
+          `<span class="hist-sum${(isCatan && sum === 7) ? ' seven' : ''}">= ${sum}</span>`;
+        historyListEl.appendChild(row);
       });
     }
 
@@ -772,17 +770,17 @@
       cubes.length = 0;
       states.length = 0;
 
-      const size = DIE_SIZES[cfg.n];
+      const size = DIE_SIZES[cfg.count];
       document.documentElement.style.setProperty('--size', size + 'px');
       document.documentElement.style.setProperty('--half', (size / 2) + 'px');
-      diceRow.style.gap = ROW_GAPS[cfg.n] + 'px';
+      diceRow.style.gap = ROW_GAPS[cfg.count] + 'px';
 
-      for (let i = 0; i < cfg.n; i++) {
+      for (let i = 0; i < cfg.count; i++) {
         const wrapper = document.createElement('div');
         wrapper.className = 'die-wrapper';
         const cube = document.createElement('div');
         cube.className = 'cube';
-        buildCube(cube, cfg.s);
+        buildCube(cube, cfg.sides);
         wrapper.appendChild(cube);
         diceRow.appendChild(wrapper);
         cubes.push(cube);
@@ -791,10 +789,13 @@
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    const sumEl = document.getElementById('sum');
+    const sumEl         = document.getElementById('sum');
+    const chartEl       = document.getElementById('chart');
+    const statsTitleEl  = document.getElementById('stats-title');
+    const historyListEl = document.getElementById('history-list');
     const saved = loadState();
     let cfg     = saved.cfg;
-    let pool    = saved.pool ?? freshPool();
+    let pool    = saved.pool ?? freshPool(cfg);
     let history = saved.history;
     let locked  = false;
 
@@ -805,14 +806,14 @@
       if (locked) return;
       locked = true;
 
-      const values = drawRoll(pool);
+      const values = drawRoll(pool, cfg);
       history.push([...values]);
       saveState(pool, history);
 
       sumEl.classList.add('rolling');
       values.forEach((v, i) => {
         let targetFace;
-        if (cfg.s === 6) {
+        if (cfg.sides === 6) {
           // pip face index matches die value
           targetFace = v;
         } else {
@@ -826,7 +827,7 @@
         const total = values.reduce((a, b) => a + b, 0);
         sumEl.textContent = total;
         // 7 triggers the robber in Catan — only applies to standard 2d6
-        sumEl.style.color = (cfg.n === 2 && cfg.s === 6 && total === 7) ? 'var(--red)' : 'var(--text)';
+        sumEl.style.color = (cfg.count === 2 && cfg.sides === 6 && total === 7) ? 'var(--red)' : 'var(--text)';
         sumEl.classList.remove('rolling');
         locked = false;
       }, 800);
@@ -881,7 +882,7 @@
 
     // ── Reset ─────────────────────────────────────────────────────────────────
     function doReset() {
-      pool = freshPool();
+      pool = freshPool(cfg);
       history = [];
       saveState(pool, history);
       sumEl.textContent = '—';
@@ -896,44 +897,44 @@
     });
 
     // ── Settings ──────────────────────────────────────────────────────────────
-    let pendingN = cfg.n;
-    let pendingS = cfg.s;
+    let pendingCount = cfg.count;
+    let pendingSides = cfg.sides;
 
     function updateSettingsUI() {
-      document.getElementById('dice-count-display').textContent = pendingN;
-      document.getElementById('dice-minus').disabled = pendingN <= 1;
-      document.getElementById('dice-plus').disabled  = pendingN >= 5;
+      document.getElementById('dice-count-display').textContent = pendingCount;
+      document.getElementById('dice-minus').disabled = pendingCount <= 1;
+      document.getElementById('dice-plus').disabled  = pendingCount >= 5;
       document.querySelectorAll('.die-type-btn').forEach(btn => {
-        btn.classList.toggle('active', +btn.dataset.s === pendingS);
+        btn.classList.toggle('active', +btn.dataset.s === pendingSides);
       });
     }
 
     document.getElementById('settings-btn').addEventListener('click', () => {
-      pendingN = cfg.n;
-      pendingS = cfg.s;
+      pendingCount = cfg.count;
+      pendingSides = cfg.sides;
       updateSettingsUI();
       openPanel(settingsPanel);
     });
 
     document.getElementById('dice-minus').addEventListener('click', () => {
-      if (pendingN > 1) { pendingN--; updateSettingsUI(); }
+      if (pendingCount > 1) { pendingCount--; updateSettingsUI(); }
     });
 
     document.getElementById('dice-plus').addEventListener('click', () => {
-      if (pendingN < 5) { pendingN++; updateSettingsUI(); }
+      if (pendingCount < 5) { pendingCount++; updateSettingsUI(); }
     });
 
     document.querySelectorAll('.die-type-btn').forEach(btn => {
-      btn.addEventListener('click', () => { pendingS = +btn.dataset.s; updateSettingsUI(); });
+      btn.addEventListener('click', () => { pendingSides = +btn.dataset.s; updateSettingsUI(); });
     });
 
     document.getElementById('settings-apply').addEventListener('click', () => {
-      const changed = pendingN !== cfg.n || pendingS !== cfg.s;
+      const changed = pendingCount !== cfg.count || pendingSides !== cfg.sides;
       if (!changed) { closePanel(); return; }
 
       const apply = () => {
-        cfg.n = pendingN;
-        cfg.s = pendingS;
+        cfg.count = pendingCount;
+        cfg.sides = pendingSides;
         buildDiceRow();
         doReset();
         closePanel();
@@ -941,7 +942,7 @@
 
       if (history.length > 0) {
         openConfirm(
-          `Switch to ${pendingN}d${pendingS}?`,
+          `Switch to ${pendingCount}d${pendingSides}?`,
           'All rolls and history will be cleared.',
           apply
         );
