@@ -65,7 +65,6 @@
 
     #dice-row {
       display: flex;
-      gap: 32px;
       align-items: center;
     }
 
@@ -132,6 +131,13 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
+    .die-number {
+      font-size: calc(var(--size) * 0.38);
+      font-weight: 700;
+      color: var(--pip);
+      line-height: 1;
+    }
+
     #sum {
       font-size: 88px;
       font-weight: 700;
@@ -156,13 +162,7 @@
       padding: 0 28px;
     }
 
-    #hint {
-      font-size: 15px;
-      color: var(--subtle);
-      letter-spacing: 0.01em;
-    }
-
-    #stats-btn {
+    .footer-btn {
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.1em;
@@ -175,8 +175,14 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Stats panel */
-    #stats-backdrop {
+    #hint {
+      font-size: 15px;
+      color: var(--subtle);
+      letter-spacing: 0.01em;
+    }
+
+    /* Bottom sheet panels */
+    #panel-backdrop {
       position: fixed;
       inset: 0;
       background: rgba(0,0,0,0.2);
@@ -185,17 +191,16 @@
       transition: opacity 0.35s;
     }
 
-    #stats-backdrop.open {
+    #panel-backdrop.open {
       opacity: 1;
       pointer-events: auto;
     }
 
-    #stats-panel {
+    .panel {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      height: 72dvh;
       background: var(--bg);
       border-radius: 20px 20px 0 0;
       box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
@@ -206,9 +211,12 @@
       padding-bottom: max(env(safe-area-inset-bottom), 24px);
     }
 
-    #stats-panel.open { transform: translateY(0); }
+    .panel.open { transform: translateY(0); }
 
-    #stats-handle {
+    #stats-panel    { height: 72dvh; }
+    #settings-panel { height: auto; max-height: 60dvh; }
+
+    .panel-handle {
       width: 36px;
       height: 4px;
       background: rgba(0,0,0,0.18);
@@ -218,7 +226,7 @@
       cursor: pointer;
     }
 
-    #stats-title {
+    .panel-title {
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.1em;
@@ -229,7 +237,7 @@
       flex-shrink: 0;
     }
 
-    #stats-scroll {
+    .panel-scroll {
       flex: 1;
       overflow-y: auto;
       -webkit-overflow-scrolling: touch;
@@ -237,14 +245,21 @@
     }
 
     /* Chart */
+    #chart-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-bottom: 4px;
+    }
+
     #chart {
       display: flex;
       gap: 4px;
-      margin-bottom: 4px;
+      min-width: min-content;
     }
 
     .chart-col {
       flex: 1;
+      min-width: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -302,7 +317,7 @@
       border-radius: 2px;
     }
 
-    .legend-swatch.theo  { background: rgba(0,0,0,0.1); }
+    .legend-swatch.theo   { background: rgba(0,0,0,0.1); }
     .legend-swatch.actual { background: var(--pip); }
 
     /* History */
@@ -350,6 +365,92 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    /* Settings */
+    .settings-section { margin-bottom: 20px; }
+
+    .settings-label {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      display: block;
+      margin-bottom: 12px;
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      background: rgba(0,0,0,0.06);
+      border-radius: 12px;
+      overflow: hidden;
+      width: fit-content;
+    }
+
+    .step-btn {
+      width: 44px;
+      height: 44px;
+      font-size: 22px;
+      font-weight: 300;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .step-btn:disabled { opacity: 0.3; }
+
+    #dice-count-display {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      width: 32px;
+      text-align: center;
+    }
+
+    .die-type-btns {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .die-type-btn {
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--subtle);
+      background: rgba(0,0,0,0.06);
+      border: 1.5px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .die-type-btn.active {
+      color: var(--text);
+      background: var(--die-bg);
+      border-color: var(--pip);
+    }
+
+    #settings-apply {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--die-bg);
+      background: var(--pip);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
     /* Confirmation modal */
     #confirm-overlay {
       position: fixed;
@@ -362,6 +463,7 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.2s;
+      z-index: 100;
     }
 
     #confirm-overlay.open {
@@ -408,7 +510,7 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    #btn-cancel { background: rgba(0,0,0,0.08); color: var(--text); }
+    #btn-cancel       { background: rgba(0,0,0,0.08); color: var(--text); }
     #btn-confirm-reset { background: var(--red); color: #fff; }
   </style>
 </head>
@@ -417,25 +519,24 @@
     <header>Catan Dice</header>
 
     <div id="roll-area">
-      <div id="dice-row">
-        <div class="die-wrapper"><div class="cube" id="cube1"></div></div>
-        <div class="die-wrapper"><div class="cube" id="cube2"></div></div>
-      </div>
+      <div id="dice-row"></div>
       <div id="sum">—</div>
     </div>
 
     <div id="footer">
+      <button class="footer-btn" id="settings-btn">Settings</button>
       <span id="hint">Tap to roll</span>
-      <button id="stats-btn">Stats</button>
+      <button class="footer-btn" id="stats-btn">Stats</button>
     </div>
   </div>
 
-  <div id="stats-backdrop"></div>
-  <div id="stats-panel">
-    <div id="stats-handle"></div>
-    <div id="stats-title">Statistics</div>
-    <div id="stats-scroll">
-      <div id="chart"></div>
+  <div id="panel-backdrop"></div>
+
+  <div class="panel" id="stats-panel">
+    <div class="panel-handle" id="stats-handle"></div>
+    <div class="panel-title" id="stats-title">Statistics</div>
+    <div class="panel-scroll">
+      <div id="chart-wrap"><div id="chart"></div></div>
       <div id="chart-legend">
         <div class="legend-item"><div class="legend-swatch theo"></div>Expected</div>
         <div class="legend-item"><div class="legend-swatch actual"></div>Actual</div>
@@ -443,6 +544,33 @@
       <div id="history-header">Roll History</div>
       <div id="history-list"></div>
       <button id="reset-btn">New Game</button>
+    </div>
+  </div>
+
+  <div class="panel" id="settings-panel">
+    <div class="panel-handle" id="settings-handle"></div>
+    <div class="panel-title">Settings</div>
+    <div class="panel-scroll">
+      <div class="settings-section">
+        <span class="settings-label">Number of dice</span>
+        <div class="stepper">
+          <button class="step-btn" id="dice-minus">−</button>
+          <span id="dice-count-display">2</span>
+          <button class="step-btn" id="dice-plus">+</button>
+        </div>
+      </div>
+      <div class="settings-section">
+        <span class="settings-label">Die type</span>
+        <div class="die-type-btns" id="die-type-btns">
+          <button class="die-type-btn" data-s="4">d4</button>
+          <button class="die-type-btn active" data-s="6">d6</button>
+          <button class="die-type-btn" data-s="8">d8</button>
+          <button class="die-type-btn" data-s="10">d10</button>
+          <button class="die-type-btn" data-s="12">d12</button>
+          <button class="die-type-btn" data-s="20">d20</button>
+        </div>
+      </div>
+      <button id="settings-apply">Apply</button>
     </div>
   </div>
 
@@ -468,20 +596,28 @@
       6: [[0,0],[0,2],[1,0],[1,2],[2,0],[2,2]],
     };
 
-    function buildCube(el) {
+    function buildCube(el, sides) {
+      el.innerHTML = '';
       for (let v = 1; v <= 6; v++) {
         const face = document.createElement('div');
         face.className = `face face-${v}`;
-        const grid = document.createElement('div');
-        grid.className = 'pip-grid';
-        for (let r = 0; r < 3; r++) {
-          for (let c = 0; c < 3; c++) {
-            const cell = document.createElement('span');
-            if (PIPS[v].some(([pr, pc]) => pr === r && pc === c)) cell.className = 'pip';
-            grid.appendChild(cell);
+        if (sides === 6) {
+          const grid = document.createElement('div');
+          grid.className = 'pip-grid';
+          for (let r = 0; r < 3; r++) {
+            for (let c = 0; c < 3; c++) {
+              const cell = document.createElement('span');
+              if (PIPS[v].some(([pr, pc]) => pr === r && pc === c)) cell.className = 'pip';
+              grid.appendChild(cell);
+            }
           }
+          face.appendChild(grid);
+        } else {
+          const num = document.createElement('span');
+          num.className = 'die-number';
+          num.textContent = v; // placeholder; overwritten on each roll
+          face.appendChild(num);
         }
-        face.appendChild(grid);
         el.appendChild(face);
       }
     }
@@ -489,18 +625,17 @@
     // ── 3D rotation map: cube rotation needed to show each face toward viewer ──
     // Verified: viewer looks in -Z; each face placed with rotateAxis(deg) translateZ(half)
     const FACE_ROT = {
-      1: { x:   0, y:   0 },  // front  (+Z normal)  → no rotation
-      2: { x:   0, y: 180 },  // back   (-Z normal)  → rotateY(180)
-      3: { x:   0, y: -90 },  // right  (+X normal)  → rotateY(-90)
-      4: { x:   0, y:  90 },  // left   (-X normal)  → rotateY(90)
-      5: { x:  90, y:   0 },  // top    (+Y normal)  → rotateX(90)  [rotateX(90): +Y→+Z]
-      6: { x: -90, y:   0 },  // bottom (-Y normal)  → rotateX(-90) [-Y→+Z]
+      1: { x:   0, y:   0 },  // front  (+Z normal)
+      2: { x:   0, y: 180 },  // back   (-Z normal)
+      3: { x:   0, y: -90 },  // right  (+X normal)
+      4: { x:   0, y:  90 },  // left   (-X normal)
+      5: { x:  90, y:   0 },  // top    (+Y normal)
+      6: { x: -90, y:   0 },  // bottom (-Y normal)
     };
 
     function rotateTo(cubeEl, state, face) {
       const cur = FACE_ROT[state.face];
       const tgt = FACE_ROT[face];
-      // Add 3 full rotations (1080°) on each axis for the rolling spin effect.
       // Accumulating absolute degrees avoids gimbal issues with CSS transitions.
       state.x += (tgt.x - cur.x) + 1080;
       state.y += (tgt.y - cur.y) + 1080;
@@ -508,20 +643,30 @@
       cubeEl.style.transform = `rotateX(${state.x}deg) rotateY(${state.y}deg)`;
     }
 
-    // ── Balanced pool (draw-without-replacement over all 36 combinations × mult) ─
-    const MULT = 3; // pool = 108 entries; gentle balancing for ~120-roll Catan game
+    // ── Balanced pool ─────────────────────────────────────────────────────────
+    const MULT = 3;
 
     function freshPool() {
+      // For very large combination spaces, skip enumeration — drawRoll falls back to random
+      if (Math.pow(cfg.s, cfg.n) > 5000) return [];
+      function combos(n) {
+        if (n === 0) return [[]];
+        return combos(n - 1).flatMap(c =>
+          Array.from({ length: cfg.s }, (_, i) => [...c, i + 1])
+        );
+      }
+      const all = combos(cfg.n);
       const pool = [];
-      for (let d1 = 1; d1 <= 6; d1++)
-        for (let d2 = 1; d2 <= 6; d2++)
-          for (let i = 0; i < MULT; i++)
-            pool.push([d1, d2]);
+      for (let m = 0; m < MULT; m++) pool.push(...all.map(c => [...c]));
       return pool;
     }
 
     function drawRoll(pool) {
-      if (pool.length === 0) pool.push(...freshPool());
+      if (pool.length === 0) {
+        if (Math.pow(cfg.s, cfg.n) > 5000)
+          return Array.from({ length: cfg.n }, () => Math.ceil(Math.random() * cfg.s));
+        pool.push(...freshPool());
+      }
       const i = Math.floor(Math.random() * pool.length);
       return pool.splice(i, 1)[0];
     }
@@ -532,39 +677,57 @@
     function loadState() {
       try {
         const s = JSON.parse(localStorage.getItem(KEY));
-        return { pool: s?.pool ?? null, history: s?.history ?? [] };
-      } catch { return { pool: null, history: [] }; }
+        return {
+          pool:    s?.pool    ?? null,
+          history: s?.history ?? [],
+          cfg:     s?.cfg     ?? { n: 2, s: 6 },
+        };
+      } catch { return { pool: null, history: [], cfg: { n: 2, s: 6 } }; }
     }
 
     function saveState(pool, history) {
-      try { localStorage.setItem(KEY, JSON.stringify({ pool, history })); } catch {}
+      try { localStorage.setItem(KEY, JSON.stringify({ pool, history, cfg })); } catch {}
     }
 
-    // ── Stats rendering ───────────────────────────────────────────────────────
-    const THEO = {};
-    for (let s = 2; s <= 12; s++) {
-      let w = 0;
-      for (let a = 1; a <= 6; a++)
-        for (let b = 1; b <= 6; b++)
-          if (a + b === s) w++;
-      THEO[s] = w / 36;
+    // ── Theoretical distribution via DP ───────────────────────────────────────
+    function computeTheo(n, s) {
+      let dp = { 0: 1 };
+      for (let d = 0; d < n; d++) {
+        const next = {};
+        for (const [sum, ways] of Object.entries(dp))
+          for (let v = 1; v <= s; v++) {
+            const ns = +sum + v;
+            next[ns] = (next[ns] || 0) + ways;
+          }
+        dp = next;
+      }
+      const total = Math.pow(s, n);
+      const result = {};
+      for (const [sum, ways] of Object.entries(dp)) result[+sum] = ways / total;
+      return result;
     }
-    const MAX_THEO = 6 / 36;
-    const BAR_H = 100; // px, normalized height for max-theoretical bar
+
+    const BAR_H = 100; // px, normalized max bar height
 
     function renderStats() {
-      const total = history.length;
-      const counts = {};
-      for (let s = 2; s <= 12; s++) counts[s] = 0;
-      history.forEach(([a, b]) => counts[a + b]++);
+      const theo    = computeTheo(cfg.n, cfg.s);
+      const minSum  = cfg.n;
+      const maxSum  = cfg.n * cfg.s;
+      const isCatan = cfg.n === 2 && cfg.s === 6;
+      const total   = history.length;
 
+      const counts = {};
+      for (let s = minSum; s <= maxSum; s++) counts[s] = 0;
+      history.forEach(vs => counts[vs.reduce((a, b) => a + b, 0)]++);
+
+      const maxTheo   = Math.max(...Object.values(theo));
       const maxActual = total > 0 ? Math.max(...Object.values(counts).map(c => c / total)) : 0;
-      const scale = Math.max(MAX_THEO, maxActual);
+      const scale     = Math.max(maxTheo, maxActual);
 
       const chartEl = document.getElementById('chart');
       chartEl.innerHTML = '';
-      for (let s = 2; s <= 12; s++) {
-        const theoH = Math.round(THEO[s] / scale * BAR_H);
+      for (let s = minSum; s <= maxSum; s++) {
+        const theoH = Math.round((theo[s] || 0) / scale * BAR_H);
         const actH  = total > 0 ? Math.round(counts[s] / total / scale * BAR_H) : 0;
         const col = document.createElement('div');
         col.className = 'chart-col';
@@ -573,7 +736,7 @@
             `<div class="bar-theo"   style="height:${theoH}px"></div>` +
             `<div class="bar-actual" style="height:${actH}px"></div>` +
           `</div>` +
-          `<div class="chart-lbl${s === 7 ? ' seven' : ''}">${s}</div>`;
+          `<div class="chart-lbl${(isCatan && s === 7) ? ' seven' : ''}">${s}</div>`;
         chartEl.appendChild(col);
       }
 
@@ -586,89 +749,205 @@
         return;
       }
       histEl.innerHTML = '';
-      history.slice().reverse().forEach(([a, b]) => {
-        const s = a + b;
+      history.slice().reverse().forEach(vs => {
+        const s = vs.reduce((a, b) => a + b, 0);
         const row = document.createElement('div');
         row.className = 'history-row';
         row.innerHTML =
-          `<span class="hist-dice">${a} + ${b}</span>` +
-          `<span class="hist-sum${s === 7 ? ' seven' : ''}">= ${s}</span>`;
+          `<span class="hist-dice">${vs.join(' + ')}</span>` +
+          `<span class="hist-sum${(isCatan && s === 7) ? ' seven' : ''}">= ${s}</span>`;
         histEl.appendChild(row);
       });
     }
 
+    // ── Dice DOM ──────────────────────────────────────────────────────────────
+    const DIE_SIZES = { 1: 150, 2: 130, 3: 90, 4: 70, 5: 56 };
+    const ROW_GAPS  = { 1: 0, 2: 32, 3: 20, 4: 12, 5: 8 };
+    const cubes  = [];
+    const states = [];
+
+    function buildDiceRow() {
+      const diceRow = document.getElementById('dice-row');
+      diceRow.innerHTML = '';
+      cubes.length = 0;
+      states.length = 0;
+
+      const size = DIE_SIZES[cfg.n];
+      document.documentElement.style.setProperty('--size', size + 'px');
+      document.documentElement.style.setProperty('--half', (size / 2) + 'px');
+      diceRow.style.gap = ROW_GAPS[cfg.n] + 'px';
+
+      for (let i = 0; i < cfg.n; i++) {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'die-wrapper';
+        const cube = document.createElement('div');
+        cube.className = 'cube';
+        buildCube(cube, cfg.s);
+        wrapper.appendChild(cube);
+        diceRow.appendChild(wrapper);
+        cubes.push(cube);
+        states.push({ x: 0, y: 0, face: 1 });
+      }
+    }
+
     // ── Init ──────────────────────────────────────────────────────────────────
-    const cube1 = document.getElementById('cube1');
-    const cube2 = document.getElementById('cube2');
-    const sumEl  = document.getElementById('sum');
-
-    buildCube(cube1);
-    buildCube(cube2);
-
-    const s1 = { x: 0, y: 0, face: 1 };
-    const s2 = { x: 0, y: 0, face: 1 };
+    const sumEl = document.getElementById('sum');
     const saved = loadState();
+    let cfg     = saved.cfg;
     let pool    = saved.pool ?? freshPool();
     let history = saved.history;
     let locked  = false;
 
+    buildDiceRow();
+
+    // ── Roll ──────────────────────────────────────────────────────────────────
     document.getElementById('roll-area').addEventListener('click', () => {
       if (locked) return;
       locked = true;
 
-      const [d1, d2] = drawRoll(pool);
-      history.push([d1, d2]);
+      const values = drawRoll(pool);
+      history.push([...values]);
       saveState(pool, history);
 
       sumEl.classList.add('rolling');
-      rotateTo(cube1, s1, d1);
-      rotateTo(cube2, s2, d2);
+      values.forEach((v, i) => {
+        let targetFace;
+        if (cfg.s === 6) {
+          // pip face index matches die value
+          targetFace = v;
+        } else {
+          targetFace = Math.ceil(Math.random() * 6);
+          cubes[i].querySelector(`.face-${targetFace} .die-number`).textContent = v;
+        }
+        rotateTo(cubes[i], states[i], targetFace);
+      });
 
       setTimeout(() => {
-        const total = d1 + d2;
+        const total = values.reduce((a, b) => a + b, 0);
         sumEl.textContent = total;
-        // 7 triggers the robber in Catan — highlight it
-        sumEl.style.color = total === 7 ? 'var(--red)' : 'var(--text)';
+        // 7 triggers the robber in Catan — only applies to standard 2d6
+        sumEl.style.color = (cfg.n === 2 && cfg.s === 6 && total === 7) ? 'var(--red)' : 'var(--text)';
         sumEl.classList.remove('rolling');
         locked = false;
       }, 800);
     });
 
-    // ── Stats panel ───────────────────────────────────────────────────────────
+    // ── Panel open/close ──────────────────────────────────────────────────────
+    const panelBackdrop = document.getElementById('panel-backdrop');
     const statsPanel    = document.getElementById('stats-panel');
-    const statsBackdrop = document.getElementById('stats-backdrop');
+    const settingsPanel = document.getElementById('settings-panel');
 
-    function openStats() {
-      renderStats();
-      statsPanel.classList.add('open');
-      statsBackdrop.classList.add('open');
+    function openPanel(panelEl) {
+      panelEl.classList.add('open');
+      panelBackdrop.classList.add('open');
     }
 
-    function closeStats() {
+    function closePanel() {
       statsPanel.classList.remove('open');
-      statsBackdrop.classList.remove('open');
+      settingsPanel.classList.remove('open');
+      panelBackdrop.classList.remove('open');
     }
 
-    document.getElementById('stats-btn').addEventListener('click', openStats);
-    document.getElementById('stats-handle').addEventListener('click', closeStats);
-    statsBackdrop.addEventListener('click', closeStats);
+    panelBackdrop.addEventListener('click', closePanel);
+    document.getElementById('stats-handle').addEventListener('click', closePanel);
+    document.getElementById('settings-handle').addEventListener('click', closePanel);
 
-    // ── Reset ─────────────────────────────────────────────────────────────────
+    document.getElementById('stats-btn').addEventListener('click', () => {
+      renderStats();
+      openPanel(statsPanel);
+    });
+
+    // ── Confirm modal (shared) ─────────────────────────────────────────────────
     const confirmOverlay = document.getElementById('confirm-overlay');
+    let confirmCallback  = null;
 
-    function openConfirm() { confirmOverlay.classList.add('open'); }
-    function closeConfirm() { confirmOverlay.classList.remove('open'); }
+    function openConfirm(title, msg, onConfirm) {
+      document.querySelector('#confirm-card h2').textContent = title;
+      document.querySelector('#confirm-card p').textContent  = msg;
+      confirmCallback = onConfirm;
+      confirmOverlay.classList.add('open');
+    }
 
-    document.getElementById('reset-btn').addEventListener('click', openConfirm);
+    function closeConfirm() {
+      confirmOverlay.classList.remove('open');
+      confirmCallback = null;
+    }
+
     document.getElementById('btn-cancel').addEventListener('click', closeConfirm);
     document.getElementById('btn-confirm-reset').addEventListener('click', () => {
+      confirmCallback?.();
+      closeConfirm();
+    });
+
+    // ── Reset ─────────────────────────────────────────────────────────────────
+    function doReset() {
       pool = freshPool();
       history = [];
       saveState(pool, history);
       sumEl.textContent = '—';
       sumEl.style.color = 'var(--text)';
-      closeConfirm();
-      closeStats();
+    }
+
+    document.getElementById('reset-btn').addEventListener('click', () => {
+      openConfirm('New game?', 'All rolls and history will be cleared.', () => {
+        doReset();
+        closePanel();
+      });
+    });
+
+    // ── Settings ──────────────────────────────────────────────────────────────
+    let pendingN = cfg.n;
+    let pendingS = cfg.s;
+
+    function updateSettingsUI() {
+      document.getElementById('dice-count-display').textContent = pendingN;
+      document.getElementById('dice-minus').disabled = pendingN <= 1;
+      document.getElementById('dice-plus').disabled  = pendingN >= 5;
+      document.querySelectorAll('.die-type-btn').forEach(btn => {
+        btn.classList.toggle('active', +btn.dataset.s === pendingS);
+      });
+    }
+
+    document.getElementById('settings-btn').addEventListener('click', () => {
+      pendingN = cfg.n;
+      pendingS = cfg.s;
+      updateSettingsUI();
+      openPanel(settingsPanel);
+    });
+
+    document.getElementById('dice-minus').addEventListener('click', () => {
+      if (pendingN > 1) { pendingN--; updateSettingsUI(); }
+    });
+
+    document.getElementById('dice-plus').addEventListener('click', () => {
+      if (pendingN < 5) { pendingN++; updateSettingsUI(); }
+    });
+
+    document.querySelectorAll('.die-type-btn').forEach(btn => {
+      btn.addEventListener('click', () => { pendingS = +btn.dataset.s; updateSettingsUI(); });
+    });
+
+    document.getElementById('settings-apply').addEventListener('click', () => {
+      const changed = pendingN !== cfg.n || pendingS !== cfg.s;
+      if (!changed) { closePanel(); return; }
+
+      const apply = () => {
+        cfg.n = pendingN;
+        cfg.s = pendingS;
+        buildDiceRow();
+        doReset();
+        closePanel();
+      };
+
+      if (history.length > 0) {
+        openConfirm(
+          `Switch to ${pendingN}d${pendingS}?`,
+          'All rolls and history will be cleared.',
+          apply
+        );
+      } else {
+        apply();
+      }
     });
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
