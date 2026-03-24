@@ -51,10 +51,10 @@
 - [x] Pool recalculates on change (all N^S combinations × multiplier)
 - [x] Triggers implicit reset with confirmation
 
-### Story 5 — Shake to Roll
-- [ ] Use DeviceMotion API to detect phone shake
-- [ ] Triggers same roll action as tap
-- [ ] Sensitivity configurable or auto-tuned
+### Story 5 — Shake to Roll ✅ DONE
+- [x] Use DeviceMotion API to detect phone shake
+- [x] Triggers same roll action as tap
+- [x] Sensitivity auto-tuned (threshold = 15 m/s², cooldown = 1000ms)
 
 ### Story 7 — Die & Pip Color Themes
 - [ ] Color picker or preset swatches for die face background color
@@ -105,3 +105,11 @@
 - Confirm modal is reused for both reset and settings-change via `openConfirm(title, msg, callback)`.
 - Red-7 highlight only when `cfg.n===2 && cfg.s===6` (Catan-specific rule).
 - Stats chart is horizontally scrollable (`#chart-wrap` with `overflow-x:auto`) to handle up to 96 bars (5d20).
+
+### Story 5
+- `DeviceMotionEvent.requestPermission()` exists only on iOS 13+ — call it inside a user-gesture handler (tap), not on page load, or it silently fails.
+- Permission is cached by iOS after first grant; no need to request on subsequent page loads.
+- `accelerationIncludingGravity` always available (gravity ~9.8 m/s² at rest); magnitude > 15 m/s² reliably detects a shake without false positives from walking.
+- 1000ms cooldown prevents a single aggressive shake from firing multiple rolls.
+- Roll logic extracted into `doRoll()` so tap and shake share identical code paths.
+- Hint text updated to "Tap or shake" only when `DeviceMotionEvent` exists (guards desktop).

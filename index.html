@@ -802,7 +802,7 @@
     buildDiceRow();
 
     // ── Roll ──────────────────────────────────────────────────────────────────
-    document.getElementById('roll-area').addEventListener('click', () => {
+    function doRoll() {
       if (locked) return;
       locked = true;
 
@@ -831,7 +831,49 @@
         sumEl.classList.remove('rolling');
         locked = false;
       }, 800);
+    }
+
+    // ── Shake to roll ─────────────────────────────────────────────────────────
+    const SHAKE_THRESHOLD = 15; // m/s² — tuned for a deliberate shake, ignores normal movement
+    const SHAKE_COOLDOWN  = 1000; // ms — prevents multiple triggers per shake gesture
+
+    let lastShakeTime = 0;
+
+    function initShake() {
+      window.addEventListener('devicemotion', e => {
+        const a = e.accelerationIncludingGravity;
+        if (!a) return;
+        const mag = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+        const now = Date.now();
+        if (mag > SHAKE_THRESHOLD && now - lastShakeTime > SHAKE_COOLDOWN) {
+          lastShakeTime = now;
+          doRoll();
+        }
+      });
+    }
+
+    function setupShake() {
+      if (typeof DeviceMotionEvent === 'undefined') return;
+      if (typeof DeviceMotionEvent.requestPermission === 'function') {
+        // iOS 13+ gates DeviceMotion behind a user-gesture permission prompt
+        DeviceMotionEvent.requestPermission()
+          .then(perm => { if (perm === 'granted') initShake(); })
+          .catch(() => {});
+      } else {
+        initShake();
+      }
+    }
+
+    let shakeSetupDone = false;
+
+    document.getElementById('roll-area').addEventListener('click', () => {
+      if (!shakeSetupDone) { shakeSetupDone = true; setupShake(); }
+      doRoll();
     });
+
+    if (typeof DeviceMotionEvent !== 'undefined') {
+      document.getElementById('hint').textContent = 'Tap or shake';
+    }
 
     // ── Panel open/close ──────────────────────────────────────────────────────
     const panelBackdrop = document.getElementById('panel-backdrop');
