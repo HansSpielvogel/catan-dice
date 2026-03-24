@@ -45,11 +45,11 @@
 - [x] "Are you sure?" confirmation modal before reset
 - [x] Clears pool, history, and localStorage
 
-### Story 4 — Configurable Dice
-- [ ] Settings panel: choose number of dice (1–5)
-- [ ] Settings panel: choose sides per die (d4, d6, d8, d10, d12, d20)
-- [ ] Pool recalculates on change (all N^S combinations × multiplier)
-- [ ] Triggers implicit reset with confirmation
+### Story 4 — Configurable Dice ✅ DONE
+- [x] Settings panel: choose number of dice (1–5)
+- [x] Settings panel: choose sides per die (d4, d6, d8, d10, d12, d20)
+- [x] Pool recalculates on change (all N^S combinations × multiplier)
+- [x] Triggers implicit reset with confirmation
 
 ### Story 5 — Shake to Roll
 - [ ] Use DeviceMotion API to detect phone shake
@@ -87,3 +87,15 @@
 - Confirmation modal is a separate `#confirm-overlay` (fixed, centered card) layered above the stats panel — simpler than nesting it inside the panel.
 - `closeStats()` is called after reset so the main screen shows the cleared state (`—`) immediately.
 - No need to reset die animation state (`s1`, `s2`) — face position is cosmetic and resets on reload anyway.
+
+### Story 4
+- `cfg = { n, s }` stored in localStorage alongside pool/history; defaults to `{n:2, s:6}` for backward compat.
+- `freshPool()` enumerates all `s^n` combos via recursion; capped at 5000 total — for larger configs `drawRoll` falls back to pure random (no balancing).
+- `computeTheo(n, s)` uses DP convolution — works for any NdS, not just 2d6.
+- `buildCube(el, sides)`: d6 gets pips; all others get a `.die-number` span updated on each roll (the target face's number is set before `rotateTo`; other faces retain previous values which is fine since they face away).
+- `cubes[]` and `states[]` arrays replace `cube1/cube2/s1/s2`; rebuilt by `buildDiceRow()` on init and on settings apply.
+- Die size set via CSS `--size`/`--half` on `:root` dynamically: N=1→150px, N=2→130px, N=3→90px, N=4→70px, N=5→56px.
+- Shared `#panel-backdrop` for both stats and settings panels (mutually exclusive, `closePanel()` closes both).
+- Confirm modal is reused for both reset and settings-change via `openConfirm(title, msg, callback)`.
+- Red-7 highlight only when `cfg.n===2 && cfg.s===6` (Catan-specific rule).
+- Stats chart is horizontally scrollable (`#chart-wrap` with `overflow-x:auto`) to handle up to 96 bars (5d20).
