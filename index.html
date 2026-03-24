@@ -148,10 +148,191 @@
       transform: scale(0.92);
     }
 
+    #footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 0 28px;
+    }
+
     #hint {
       font-size: 15px;
       color: var(--subtle);
       letter-spacing: 0.01em;
+    }
+
+    #stats-btn {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      background: none;
+      border: none;
+      padding: 8px 0;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Stats panel */
+    #stats-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s;
+    }
+
+    #stats-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #stats-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72dvh;
+      background: var(--bg);
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+      transform: translateY(100%);
+      transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+      display: flex;
+      flex-direction: column;
+      padding-bottom: max(env(safe-area-inset-bottom), 24px);
+    }
+
+    #stats-panel.open { transform: translateY(0); }
+
+    #stats-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(0,0,0,0.18);
+      border-radius: 2px;
+      margin: 12px auto 0;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    #stats-title {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      text-align: center;
+      padding: 14px 0 10px;
+      flex-shrink: 0;
+    }
+
+    #stats-scroll {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 20px 16px;
+    }
+
+    /* Chart */
+    #chart {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .chart-col {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .chart-bar-area {
+      height: 110px;
+      width: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .bar-theo {
+      flex: 1;
+      background: rgba(0,0,0,0.1);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .bar-actual {
+      flex: 1;
+      background: var(--pip);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .chart-lbl {
+      font-size: 10px;
+      color: var(--subtle);
+      font-weight: 500;
+      margin-top: 3px;
+      line-height: 14px;
+    }
+
+    .chart-lbl.seven { color: var(--red); font-weight: 700; }
+
+    #chart-legend {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      color: var(--subtle);
+    }
+
+    .legend-swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+    }
+
+    .legend-swatch.theo  { background: rgba(0,0,0,0.1); }
+    .legend-swatch.actual { background: var(--pip); }
+
+    /* History */
+    #history-header {
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--subtle);
+      margin-bottom: 8px;
+    }
+
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.07);
+      font-size: 17px;
+    }
+
+    .hist-dice { color: var(--subtle); }
+    .hist-sum  { font-weight: 600; color: var(--text); }
+    .hist-sum.seven { color: var(--red); }
+
+    .no-rolls {
+      text-align: center;
+      color: var(--subtle);
+      font-size: 15px;
+      padding: 24px 0;
     }
   </style>
 </head>
@@ -167,7 +348,25 @@
       <div id="sum">—</div>
     </div>
 
-    <div id="hint">Tap to roll</div>
+    <div id="footer">
+      <span id="hint">Tap to roll</span>
+      <button id="stats-btn">Stats</button>
+    </div>
+  </div>
+
+  <div id="stats-backdrop"></div>
+  <div id="stats-panel">
+    <div id="stats-handle"></div>
+    <div id="stats-title">Statistics</div>
+    <div id="stats-scroll">
+      <div id="chart"></div>
+      <div id="chart-legend">
+        <div class="legend-item"><div class="legend-swatch theo"></div>Expected</div>
+        <div class="legend-item"><div class="legend-swatch actual"></div>Actual</div>
+      </div>
+      <div id="history-header">Roll History</div>
+      <div id="history-list"></div>
+    </div>
   </div>
 
   <script>
@@ -242,12 +441,72 @@
     // ── State persistence ─────────────────────────────────────────────────────
     const KEY = 'catan-dice-v1';
 
-    function loadPool() {
-      try { return JSON.parse(localStorage.getItem(KEY))?.pool ?? null; } catch { return null; }
+    function loadState() {
+      try {
+        const s = JSON.parse(localStorage.getItem(KEY));
+        return { pool: s?.pool ?? null, history: s?.history ?? [] };
+      } catch { return { pool: null, history: [] }; }
     }
 
-    function savePool(pool) {
-      try { localStorage.setItem(KEY, JSON.stringify({ pool })); } catch {}
+    function saveState(pool, history) {
+      try { localStorage.setItem(KEY, JSON.stringify({ pool, history })); } catch {}
+    }
+
+    // ── Stats rendering ───────────────────────────────────────────────────────
+    const THEO = {};
+    for (let s = 2; s <= 12; s++) {
+      let w = 0;
+      for (let a = 1; a <= 6; a++)
+        for (let b = 1; b <= 6; b++)
+          if (a + b === s) w++;
+      THEO[s] = w / 36;
+    }
+    const MAX_THEO = 6 / 36;
+    const BAR_H = 100; // px, normalized height for max-theoretical bar
+
+    function renderStats() {
+      const total = history.length;
+      const counts = {};
+      for (let s = 2; s <= 12; s++) counts[s] = 0;
+      history.forEach(([a, b]) => counts[a + b]++);
+
+      const maxActual = total > 0 ? Math.max(...Object.values(counts).map(c => c / total)) : 0;
+      const scale = Math.max(MAX_THEO, maxActual);
+
+      const chartEl = document.getElementById('chart');
+      chartEl.innerHTML = '';
+      for (let s = 2; s <= 12; s++) {
+        const theoH = Math.round(THEO[s] / scale * BAR_H);
+        const actH  = total > 0 ? Math.round(counts[s] / total / scale * BAR_H) : 0;
+        const col = document.createElement('div');
+        col.className = 'chart-col';
+        col.innerHTML =
+          `<div class="chart-bar-area">` +
+            `<div class="bar-theo"   style="height:${theoH}px"></div>` +
+            `<div class="bar-actual" style="height:${actH}px"></div>` +
+          `</div>` +
+          `<div class="chart-lbl${s === 7 ? ' seven' : ''}">${s}</div>`;
+        chartEl.appendChild(col);
+      }
+
+      document.getElementById('stats-title').textContent =
+        total === 0 ? 'Statistics' : `Statistics — ${total} roll${total === 1 ? '' : 's'}`;
+
+      const histEl = document.getElementById('history-list');
+      if (total === 0) {
+        histEl.innerHTML = '<div class="no-rolls">No rolls yet</div>';
+        return;
+      }
+      histEl.innerHTML = '';
+      history.slice().reverse().forEach(([a, b]) => {
+        const s = a + b;
+        const row = document.createElement('div');
+        row.className = 'history-row';
+        row.innerHTML =
+          `<span class="hist-dice">${a} + ${b}</span>` +
+          `<span class="hist-sum${s === 7 ? ' seven' : ''}">= ${s}</span>`;
+        histEl.appendChild(row);
+      });
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -260,15 +519,18 @@
 
     const s1 = { x: 0, y: 0, face: 1 };
     const s2 = { x: 0, y: 0, face: 1 };
-    let pool = loadPool() ?? freshPool();
-    let locked = false;
+    const saved = loadState();
+    let pool    = saved.pool ?? freshPool();
+    let history = saved.history;
+    let locked  = false;
 
     document.getElementById('roll-area').addEventListener('click', () => {
       if (locked) return;
       locked = true;
 
       const [d1, d2] = drawRoll(pool);
-      savePool(pool);
+      history.push([d1, d2]);
+      saveState(pool, history);
 
       sumEl.classList.add('rolling');
       rotateTo(cube1, s1, d1);
@@ -283,6 +545,25 @@
         locked = false;
       }, 800);
     });
+
+    // ── Stats panel ───────────────────────────────────────────────────────────
+    const statsPanel    = document.getElementById('stats-panel');
+    const statsBackdrop = document.getElementById('stats-backdrop');
+
+    function openStats() {
+      renderStats();
+      statsPanel.classList.add('open');
+      statsBackdrop.classList.add('open');
+    }
+
+    function closeStats() {
+      statsPanel.classList.remove('open');
+      statsBackdrop.classList.remove('open');
+    }
+
+    document.getElementById('stats-btn').addEventListener('click', openStats);
+    document.getElementById('stats-handle').addEventListener('click', closeStats);
+    statsBackdrop.addEventListener('click', closeStats);
 
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
   </script>
