@@ -1,0 +1,19 @@
+{
+  "name": "Catan Dice",
+  "short_name": "Catan Dice",
+  "description": "Balanced dice roller for Settlers of Catan",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f2e8",
+  "theme_color": "#f7f2e8",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
