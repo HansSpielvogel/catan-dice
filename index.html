@@ -294,7 +294,7 @@
       line-height: 14px;
     }
 
-    .chart-lbl.seven { color: var(--red); font-weight: 700; }
+    .chart-lbl.red { color: var(--red); font-weight: 700; }
 
     #chart-legend {
       display: flex;
@@ -341,7 +341,7 @@
 
     .hist-dice { color: var(--subtle); }
     .hist-sum  { font-weight: 600; color: var(--text); }
-    .hist-sum.seven { color: var(--red); }
+    .hist-sum.red { color: var(--red); }
 
     .no-rolls {
       text-align: center;
@@ -544,6 +544,50 @@
     }
 
     .swatch.active { outline-color: var(--text); }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .toggle {
+      position: relative;
+      width: 51px;
+      height: 31px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .toggle input { opacity: 0; position: absolute; width: 0; height: 0; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.2);
+      border-radius: 31px;
+      transition: background 0.2s;
+    }
+
+    .toggle input:checked + .toggle-track { background: #34c759; }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 27px;
+      height: 27px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+    .toggle input:checked ~ .toggle-thumb { transform: translateX(20px); }
+
+    .chart-lbl.catan-bold { font-weight: 800; }
+    .hist-sum.catan-bold  { font-weight: 800; }
   </style>
 </head>
 <body>
@@ -612,12 +656,27 @@
         <span class="mult-hint" id="mult-hint">Balanced</span>
       </div>
       <div class="settings-section">
+        <div class="toggle-row">
+          <span class="settings-label" style="margin-bottom:0">Catan mode</span>
+          <label class="toggle">
+            <input type="checkbox" id="catan-toggle">
+            <div class="toggle-track"></div>
+            <div class="toggle-thumb"></div>
+          </label>
+        </div>
+        <span class="mult-hint">Highlights 6 &amp; 8 in red, 7 in bold</span>
+      </div>
+      <div class="settings-section">
         <span class="settings-label">Die color</span>
         <div class="swatch-row" id="die-bg-swatches"></div>
       </div>
       <div class="settings-section">
         <span class="settings-label">Pip color</span>
         <div class="swatch-row" id="pip-swatches"></div>
+      </div>
+      <div class="settings-section">
+        <span class="settings-label">Background</span>
+        <div class="swatch-row" id="bg-swatches"></div>
       </div>
       <button id="settings-apply">Apply</button>
     </div>
@@ -721,7 +780,7 @@
     }
 
     // ── State persistence ─────────────────────────────────────────────────────
-    const KEY = 'catan-dice-v2';
+    const KEY = 'catan-dice-v3';
 
     function loadState() {
       try {
@@ -736,9 +795,11 @@
             mult:  c.mult  ?? 3,
             dieBg: c.dieBg ?? '#ffffff',
             pip:   c.pip   ?? '#1c1c1e',
+            bg:    c.bg    ?? '#f7f2e8',
+            catan: c.catan ?? false,
           },
         };
-      } catch { return { pool: null, history: [], cfg: { count: 2, sides: 6, mult: 3, dieBg: '#ffffff', pip: '#1c1c1e' } }; }
+      } catch { return { pool: null, history: [], cfg: { count: 2, sides: 6, mult: 3, dieBg: '#ffffff', pip: '#1c1c1e', bg: '#f7f2e8', catan: false } }; }
     }
 
     function saveState(pool, history) {
@@ -769,7 +830,7 @@
       const theo    = computeTheo(cfg.count, cfg.sides);
       const minSum  = cfg.count;
       const maxSum  = cfg.count * cfg.sides;
-      const isCatan = cfg.count === 2 && cfg.sides === 6;
+      const isCatan = cfg.catan;
       const total   = history.length;
 
       const counts = {};
@@ -791,7 +852,7 @@
             `<div class="bar-theo"   style="height:${theoH}px"></div>` +
             `<div class="bar-actual" style="height:${actH}px"></div>` +
           `</div>` +
-          `<div class="chart-lbl${(isCatan && sum === 7) ? ' seven' : ''}">${sum}</div>`;
+          `<div class="chart-lbl${isCatan ? (sum === 7 ? ' catan-bold' : (sum === 6 || sum === 8) ? ' red' : '') : ''}">${sum}</div>`;
         chartEl.appendChild(col);
       }
 
@@ -809,7 +870,7 @@
         row.className = 'history-row';
         row.innerHTML =
           `<span class="hist-dice">${vs.join(' + ')}</span>` +
-          `<span class="hist-sum${(isCatan && sum === 7) ? ' seven' : ''}">= ${sum}</span>`;
+          `<span class="hist-sum${isCatan ? (sum === 7 ? ' catan-bold' : (sum === 6 || sum === 8) ? ' red' : '') : ''}">= ${sum}</span>`;
         historyListEl.appendChild(row);
       });
     }
@@ -844,12 +905,14 @@
     }
 
     // ── Theme ─────────────────────────────────────────────────────────────────
-    const DIE_BG_PRESETS = ['#ffffff','#f5f0e0','#fffde7','#e8f5e9','#ddeeff','#fce4ec','#37474f','#1c1c1e'];
-    const PIP_PRESETS    = ['#1c1c1e','#ffffff','#c0392b','#2980b9','#27ae60','#f39c12'];
+    const DIE_BG_PRESETS = ['#ffffff','#fffde7','#e8f5e9','#ddeeff','#fce4ec','#8B5E3C','#37474f','#1c1c1e'];
+    const PIP_PRESETS    = ['#1c1c1e','#ffffff','#c0392b','#2980b9','#27ae60','#FFD700','#C0C0C0','#fffde7'];
+    const BG_PRESETS     = ['#f7f2e8','#ffffff','#e8ddd0','#2c2418','#1e2530'];
 
     function applyTheme() {
       document.documentElement.style.setProperty('--die-bg', cfg.dieBg);
       document.documentElement.style.setProperty('--pip', cfg.pip);
+      document.documentElement.style.setProperty('--bg', cfg.bg);
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -902,7 +965,7 @@
         const total = values.reduce((a, b) => a + b, 0);
         sumEl.textContent = total;
         // 7 triggers the robber in Catan — only applies to standard 2d6
-        sumEl.style.color = (cfg.count === 2 && cfg.sides === 6 && total === 7) ? 'var(--red)' : 'var(--text)';
+        sumEl.style.color = (cfg.catan && (total === 6 || total === 8)) ? 'var(--red)' : 'var(--text)';
         sumEl.classList.remove('rolling');
         locked = false;
       }, 800);
@@ -1022,6 +1085,8 @@
     let pendingMult  = cfg.mult;
     let pendingDieBg = cfg.dieBg;
     let pendingPip   = cfg.pip;
+    let pendingBg    = cfg.bg;
+    let pendingCatan = cfg.catan;
 
     function updateSettingsUI() {
       diceCountDisplayEl.textContent = pendingCount;
@@ -1040,6 +1105,10 @@
       document.querySelectorAll('#pip-swatches .swatch').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.color === pendingPip);
       });
+      document.querySelectorAll('#bg-swatches .swatch').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.color === pendingBg);
+      });
+      catnToggleEl.checked = pendingCatan;
     }
 
     function buildSwatchRow(containerEl, presets, onClick) {
@@ -1065,12 +1134,23 @@
       updateSettingsUI();
     });
 
+    buildSwatchRow(document.getElementById('bg-swatches'), BG_PRESETS, color => {
+      pendingBg = color;
+      document.documentElement.style.setProperty('--bg', color);
+      updateSettingsUI();
+    });
+
+    const catnToggleEl = document.getElementById('catan-toggle');
+    catnToggleEl.addEventListener('change', () => { pendingCatan = catnToggleEl.checked; });
+
     document.getElementById('settings-btn').addEventListener('click', () => {
       pendingCount = cfg.count;
       pendingSides = cfg.sides;
       pendingMult  = cfg.mult;
       pendingDieBg = cfg.dieBg;
       pendingPip   = cfg.pip;
+      pendingBg    = cfg.bg;
+      pendingCatan = cfg.catan;
       updateSettingsUI();
       openPanel(settingsPanel);
     });
@@ -1098,7 +1178,7 @@
     document.getElementById('settings-apply').addEventListener('click', () => {
       const diceChanged  = pendingCount !== cfg.count || pendingSides !== cfg.sides;
       const multChanged  = pendingMult  !== cfg.mult;
-      const themeChanged = pendingDieBg !== cfg.dieBg || pendingPip !== cfg.pip;
+      const themeChanged = pendingDieBg !== cfg.dieBg || pendingPip !== cfg.pip || pendingBg !== cfg.bg || pendingCatan !== cfg.catan;
       const cfgChanged   = diceChanged || multChanged;
       if (!cfgChanged && !themeChanged) { closePanel(); return; }
 
@@ -1108,6 +1188,8 @@
         cfg.mult  = pendingMult;
         cfg.dieBg = pendingDieBg;
         cfg.pip   = pendingPip;
+        cfg.bg    = pendingBg;
+        cfg.catan = pendingCatan;
         applyTheme();
         if (cfgChanged) {
           buildDiceRow();
