@@ -40,10 +40,10 @@
 - [x] Bar chart: actual frequency vs theoretical frequency per sum (2–12)
 - [x] Toggle button to show/hide stats panel
 
-### Story 3 — Reset
-- [ ] Reset button visible in UI
-- [ ] "Are you sure?" confirmation modal before reset
-- [ ] Clears pool, history, and localStorage
+### Story 3 — Reset ✅ DONE
+- [x] Reset button visible in UI (inside stats panel, labeled "New Game")
+- [x] "Are you sure?" confirmation modal before reset
+- [x] Clears pool, history, and localStorage
 
 ### Story 4 — Configurable Dice
 - [ ] Settings panel: choose number of dice (1–5)
@@ -81,3 +81,9 @@
 - Stats panel is a CSS bottom-sheet: `position:fixed; transform:translateY(100%)` → `.open { transform:translateY(0) }` with a backdrop overlay. Re-render on every open (cheap for ≤200 rolls).
 - Two bars per column (gray=expected, dark=actual), both in a `display:flex; align-items:flex-end` container — height set via inline `style="height:Xpx"` since parent has no definite pixel height from CSS alone.
 - `renderStats()` is called on open, not on every roll — avoids wasted work when panel is closed.
+
+### Story 3
+- Reset button lives inside the stats panel (natural placement — user reviews stats then decides to reset).
+- Confirmation modal is a separate `#confirm-overlay` (fixed, centered card) layered above the stats panel — simpler than nesting it inside the panel.
+- `closeStats()` is called after reset so the main screen shows the cleared state (`—`) immediately.
+- No need to reset die animation state (`s1`, `s2`) — face position is cosmetic and resets on reload anyway.
