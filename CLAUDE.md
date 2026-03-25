@@ -48,7 +48,7 @@ Single key `catan-dice-v2`, stores one JSON object:
 
 ### Balancing Pool
 - `freshPool(cfg)` enumerates all `sides^count` combinations recursively × `POOL_MULT=3`
-- **Cap**: if `sides^count > 5000`, returns `[]` — `drawRoll()` then generates pure random rolls (no balancing)
+- **Cap**: if `sides^count * mult > 5000`, returns `[]` — `drawRoll()` then generates pure random rolls (no balancing)
 - `drawRoll(pool, cfg)` splices a random entry out (draw without replacement); auto-refills when empty
 - Pool size for standard 2d6: 36 × 3 = 108 entries
 
@@ -93,6 +93,11 @@ These conventions are established and must be maintained in future stories:
 - **Loop variables**: use descriptive names (`sum`, `value`) not single letters (`s`, `v`) in `renderStats`
 - **Constants**: use `SCREAMING_SNAKE` and descriptive names (`POOL_MULT` not `MULT`, `BAR_H` is fine as domain-standard)
 - **localStorage key**: currently `catan-dice-v2` — bump to v3 if the stored shape changes again
+
+## Service Worker Cache
+- Cache key is in `sw.js` line 1: `const CACHE = 'catan-dice-vX.Y'`
+- Bump the version on every deploy so users get the latest app (old SW is replaced)
+- Use semantic versioning: bump minor (v1.1 → v1.2) for content updates, major (v1.x → v2.0) for breaking changes
 
 ## Git Workflow
 - Commit after completing each story
