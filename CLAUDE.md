@@ -98,6 +98,7 @@ These conventions are established and must be maintained in future stories:
 - Cache key is in `sw.js` line 1: `const CACHE = 'catan-dice-vX.Y'`
 - Bump the version on every deploy so users get the latest app (old SW is replaced)
 - Use semantic versioning: bump minor (v1.1 → v1.2) for content updates, major (v1.x → v2.0) for breaking changes
+- The version label in the settings panel (`#version-label`) is populated at runtime from the SW cache key — **do not hardcode a version string in `index.html`**; only `sw.js` needs updating
 
 ## Git Workflow
 - Commit after completing each story

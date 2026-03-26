@@ -764,3 +764,8 @@ document.getElementById('settings-apply').addEventListener('click', () => {
 });
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+
+caches.keys().then(keys => {
+  const key = keys.find(k => k.startsWith('catan-dice-'));
+  if (key) document.getElementById('version-label').textContent = key.replace('catan-dice-', '');
+});
