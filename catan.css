@@ -1,0 +1,17 @@
+.chart-sum-label.red        { color: var(--red); font-weight: 700; }
+.history-sum.red            { color: var(--red); }
+.chart-sum-label.catan-bold { font-weight: 800; }
+.history-sum.catan-bold     { font-weight: 800; }
+
+.event-die-sep {
+  width: 1px;
+  background: rgba(0,0,0,0.14);
+  align-self: stretch;
+  margin: 8px 12px;
+  flex-shrink: 0;
+}
+
+.event-icon {
+  width: 62%;
+  height: 62%;
+}

@@ -1,5 +1,5 @@
-const CACHE = 'catan-dice-v1.3';
-const ASSETS = ['./', './index.html', './manifest.json', './icon.svg', './sw.js'];
+const CACHE = 'catan-dice-v1.4';
+const ASSETS = ['./', './index.html', './style.css', './catan.css', './app.js', './catan.js', './manifest.json', './icon.svg', './sw.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
